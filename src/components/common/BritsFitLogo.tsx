@@ -23,7 +23,7 @@ export const BritsFitLogo: React.FC<BritsFitLogoProps> = ({
     '2xl': { box: 96, text: 'text-4xl', subtext: 'text-base' },
   }[size];
 
-  const assetSrc = usePng ? '/assets/britsfit-icon.png' : '/assets/britsfit-logo.svg';
+  const assetSrc = usePng ? '/src/assets/britsfit-icon.png' : '/src/assets/britsfit-logo.svg';
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>

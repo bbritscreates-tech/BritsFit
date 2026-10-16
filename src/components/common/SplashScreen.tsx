@@ -60,7 +60,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         <div className="relative mb-6">
           <div className="absolute -inset-4 rounded-full bg-[#12B8C7] opacity-20 blur-xl animate-pulse" />
           <img
-            src="/assets/britsfit-logo.svg"
+            src="assets/britsfit-logo.svg"
             alt="BritsFit Logo"
             className="relative w-28 h-28 drop-shadow-2xl rounded-3xl"
           />

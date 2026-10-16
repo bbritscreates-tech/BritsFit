@@ -6,13 +6,18 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
+  const base = '/BritsFit/';
+
   return {
-    base: '/',
+    base,
+
     plugins: [
       react(),
       tailwindcss(),
+
       VitePWA({
         registerType: 'autoUpdate',
+
         includeAssets: [
           'icon.svg',
           'apple-touch-icon.png',
@@ -23,8 +28,9 @@ export default defineConfig(() => {
           'assets/britsfit-icon.png',
           'assets/britsfit-splash.png',
         ],
+
         manifest: {
-          id: '/',
+          id: base,
           name: 'BritsFit - Personal & Family Fitness Tracker',
           short_name: 'BritsFit',
           description:
@@ -32,43 +38,48 @@ export default defineConfig(() => {
           theme_color: '#102B55',
           background_color: '#102B55',
           display: 'standalone',
-          start_url: '/',
-          scope: '/',
+          start_url: base,
+          scope: base,
+
           icons: [
             {
-              src: '/pwa-192x192.png',
+              src: `${base}pwa-192x192.png`,
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-512x512.png',
+              src: `${base}pwa-512x512.png`,
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-maskable-512x512.png',
+              src: `${base}pwa-maskable-512x512.png`,
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
             },
           ],
         },
+
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         },
+
         devOptions: {
           enabled: true,
           type: 'module',
         },
       }),
     ],
+
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
     },
+
     server: {
       // Preserve the AI Studio HMR configuration.
       hmr: process.env.DISABLE_HMR !== 'true',

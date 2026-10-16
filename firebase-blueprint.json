@@ -1,0 +1,184 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Top-level account profile and settings for BritsFit user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 1024 },
+        "activeProfileId": { "type": "string", "maxLength": 128 },
+        "theme": { "type": "string", "enum": ["light", "dark"] },
+        "weightUnit": { "type": "string", "enum": ["kg", "lbs"] },
+        "distanceUnit": { "type": "string", "enum": ["km", "mi"] },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "email"]
+    },
+    "FamilyProfile": {
+      "title": "FamilyProfile",
+      "description": "Independent profile for a family member sharing the account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 64 },
+        "avatarColor": { "type": "string", "maxLength": 32 },
+        "relationship": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "name"]
+    },
+    "Workout": {
+      "title": "Workout",
+      "description": "Workout session entry containing logged exercises and sets",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "startTime": { "type": "string", "maxLength": 16 },
+        "name": { "type": "string", "maxLength": 128 },
+        "workoutType": { "type": "string", "maxLength": 64 },
+        "durationSeconds": { "type": "number" },
+        "effortRating": { "type": "number" },
+        "discomfortRating": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 2048 }
+      },
+      "required": ["id", "userId", "profileId", "date", "name"]
+    },
+    "CardioSession": {
+      "title": "CardioSession",
+      "description": "Walking, running, or cardio training session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "startTime": { "type": "string", "maxLength": 16 },
+        "activityType": { "type": "string", "maxLength": 64 },
+        "distanceKm": { "type": "number" },
+        "durationSeconds": { "type": "number" },
+        "paceMinPerKm": { "type": "number" },
+        "speedKmh": { "type": "number" },
+        "elevationGainM": { "type": "number" },
+        "avgHeartRate": { "type": "number" },
+        "stepCount": { "type": "number" },
+        "effortRating": { "type": "number" },
+        "routeLocation": { "type": "string", "maxLength": 128 },
+        "notes": { "type": "string", "maxLength": 2048 }
+      },
+      "required": ["id", "userId", "profileId", "date", "activityType", "distanceKm", "durationSeconds"]
+    },
+    "BodyMeasurement": {
+      "title": "BodyMeasurement",
+      "description": "Body metrics entry recording weight and physical dimensions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "weightKg": { "type": "number" },
+        "bodyFatPercent": { "type": "number" },
+        "waistCm": { "type": "number" },
+        "hipsCm": { "type": "number" },
+        "chestCm": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 1024 }
+      },
+      "required": ["id", "userId", "profileId", "date", "weightKg"]
+    },
+    "DailyHabit": {
+      "title": "DailyHabit",
+      "description": "Daily wellbeing, recovery, water, and sleep tracking entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "waterLiters": { "type": "number" },
+        "sleepHours": { "type": "number" },
+        "energyRating": { "type": "number" },
+        "moodRating": { "type": "number" },
+        "stressRating": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 1024 }
+      },
+      "required": ["id", "userId", "profileId", "date"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Target fitness and wellbeing milestone for the profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 128 },
+        "targetValue": { "type": "number" },
+        "currentValue": { "type": "number" },
+        "unit": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "maxLength": 32 },
+        "category": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "profileId", "title", "targetValue", "status"]
+    },
+    "CustomExercise": {
+      "title": "CustomExercise",
+      "description": "Custom exercise definition added to library",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 64 },
+        "primaryMuscleGroup": { "type": "string", "maxLength": 64 },
+        "exerciseType": { "type": "string", "maxLength": 32 },
+        "instructions": { "type": "string", "maxLength": 2048 },
+        "isCustom": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "profileId", "name", "category", "primaryMuscleGroup"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User account document"
+    },
+    "/users/{userId}/familyProfiles/{profileId}": {
+      "schema": "FamilyProfile",
+      "description": "Family member profile"
+    },
+    "/users/{userId}/workouts/{workoutId}": {
+      "schema": "Workout",
+      "description": "Workout sessions logged by the user or family profile"
+    },
+    "/users/{userId}/cardio/{cardioId}": {
+      "schema": "CardioSession",
+      "description": "Cardio, running and walking sessions"
+    },
+    "/users/{userId}/measurements/{measurementId}": {
+      "schema": "BodyMeasurement",
+      "description": "Weight and circumference tracking"
+    },
+    "/users/{userId}/habits/{habitId}": {
+      "schema": "DailyHabit",
+      "description": "Daily habits, sleep, water, and wellness entries"
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "Goals and milestones"
+    },
+    "/users/{userId}/exercises/{exerciseId}": {
+      "schema": "CustomExercise",
+      "description": "Custom exercises in library"
+    }
+  }
+}

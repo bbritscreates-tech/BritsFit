@@ -1,0 +1,7 @@
+{
+  "name": "BritsFit - Personal & Family Fitness Tracker",
+  "description": "Comprehensive personal and family fitness tracker for workouts, running, walking, body measurements, daily habits, and progress analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

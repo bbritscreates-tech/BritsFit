@@ -18,16 +18,7 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
 
-        includeAssets: [
-          'icon.svg',
-          'apple-touch-icon.png',
-          'pwa-192x192.png',
-          'pwa-512x512.png',
-          'assets/britsfit-logo.svg',
-          'assets/britsfit-logo.png',
-          'assets/britsfit-icon.png',
-          'assets/britsfit-splash.png',
-        ],
+        
 
         manifest: {
           id: base,

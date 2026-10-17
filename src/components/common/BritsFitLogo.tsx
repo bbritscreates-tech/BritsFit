@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 
 interface BritsFitLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -16,6 +15,8 @@ export const BritsFitLogo: React.FC<BritsFitLogoProps> = ({
   usePng = false,
   lightText = false,
 }) => {
+  const [loadError, setLoadError] = useState(false);
+
   const iconDimensions = {
     sm: { box: 32, text: 'text-lg', subtext: 'text-[9px]' },
     md: { box: 40, text: 'text-xl', subtext: 'text-[10px]' },
@@ -24,22 +25,29 @@ export const BritsFitLogo: React.FC<BritsFitLogoProps> = ({
     '2xl': { box: 96, text: 'text-4xl', subtext: 'text-base' },
   }[size];
 
-  const baseUrl = import.meta.env.BASE_URL;
-  const assetSrc = usePng
-    ? `${baseUrl}assets/britsfit-icon.png`
-    : `${baseUrl}assets/britsfit-logo.svg`;
+  const base = import.meta.env.BASE_URL || '/';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
+  const primarySrc = usePng
+    ? `${cleanBase}assets/britsfit-icon.png`
+    : `${cleanBase}assets/britsfit-logo.svg`;
+  const fallbackSrc = usePng
+    ? '/assets/britsfit-icon.png'
+    : '/assets/britsfit-logo.svg';
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       <img
-        src={assetSrc}
+        src={loadError ? fallbackSrc : primarySrc}
         alt="BritsFit Logo"
         width={iconDimensions.box}
         height={iconDimensions.box}
-        className="shrink-0 drop-shadow-md transition-transform duration-200 hover:scale-105 rounded-2xl object-contain"
+        className="shrink-0 drop-shadow-md transition-transform duration-200 hover:scale-105 rounded-xl object-contain"
         style={{
           width: iconDimensions.box,
           height: iconDimensions.box,
+        }}
+        onError={() => {
+          if (!loadError) setLoadError(true);
         }}
         loading="eager"
       />

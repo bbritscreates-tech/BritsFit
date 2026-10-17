@@ -145,6 +145,90 @@
         "isCustom": { "type": "boolean" }
       },
       "required": ["id", "userId", "profileId", "name", "category", "primaryMuscleGroup"]
+    },
+    "PlannerTask": {
+      "title": "PlannerTask",
+      "description": "Personal task or to-do with due date, recurrence, subtasks, and priority",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "description": { "type": "string", "maxLength": 2048 },
+        "dueDate": { "type": "string", "maxLength": 32 },
+        "priority": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "maxLength": 32 },
+        "category": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "profileId", "title", "status", "priority"]
+    },
+    "PlannedActivity": {
+      "title": "PlannedActivity",
+      "description": "Scheduled workout, cardio, or appointment in calendar",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "activityType": { "type": "string", "maxLength": 64 },
+        "date": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "maxLength": 32 }
+      },
+      "required": ["id", "userId", "profileId", "title", "activityType", "date", "status"]
+    },
+    "TaskList": {
+      "title": "TaskList",
+      "description": "Named project or to-do list folder",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "userId", "profileId", "name"]
+    },
+    "PersonalNote": {
+      "title": "PersonalNote",
+      "description": "Private note or journal entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "content": { "type": "string" }
+      },
+      "required": ["id", "userId", "profileId", "title"]
+    },
+    "FocusSession": {
+      "title": "FocusSession",
+      "description": "Recorded focus timer session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "durationMinutes": { "type": "number" },
+        "actualMinutes": { "type": "number" }
+      },
+      "required": ["id", "userId", "profileId", "durationMinutes"]
+    },
+    "ReminderItem": {
+      "title": "ReminderItem",
+      "description": "Scheduled reminder or notification trigger",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "profileId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "triggerTime": { "type": "string", "maxLength": 64 },
+        "isEnabled": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "profileId", "title", "triggerTime"]
     }
   },
   "firestore": {
@@ -179,6 +263,30 @@
     "/users/{userId}/exercises/{exerciseId}": {
       "schema": "CustomExercise",
       "description": "Custom exercises in library"
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "PlannerTask",
+      "description": "Tasks and to-dos"
+    },
+    "/users/{userId}/plannedActivities/{activityId}": {
+      "schema": "PlannedActivity",
+      "description": "Scheduled calendar activities and workouts"
+    },
+    "/users/{userId}/taskLists/{listId}": {
+      "schema": "TaskList",
+      "description": "Named project lists"
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": "PersonalNote",
+      "description": "Personal notes and journal entries"
+    },
+    "/users/{userId}/focusSessions/{sessionId}": {
+      "schema": "FocusSession",
+      "description": "Focus timer logs"
+    },
+    "/users/{userId}/reminders/{reminderId}": {
+      "schema": "ReminderItem",
+      "description": "Reminders and alert triggers"
     }
   }
 }

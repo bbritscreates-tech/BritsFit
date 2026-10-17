@@ -14,6 +14,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 }) => {
   const [fade, setFade] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Initializing BritsFit...');
+  const [imgError, setImgError] = useState(false);
+
+  const base = import.meta.env.BASE_URL || '/';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
+  const logoUrl = imgError
+    ? '/assets/britsfit-logo.png'
+    : `${cleanBase}assets/britsfit-logo.png`;
 
   useEffect(() => {
     const timer1 = setTimeout(() => {
@@ -60,9 +67,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         <div className="relative mb-6">
           <div className="absolute -inset-4 rounded-full bg-[#12B8C7] opacity-20 blur-xl animate-pulse" />
           <img
-            src="/BritsFit/assets/britsfit-logo.png"
-            alt="BritsFit Logo"
-            className="relative w-28 h-28 drop-shadow-2xl rounded-3xl"
+            src={logoUrl}
+            alt="BritsFit Official Logo"
+            className="relative w-28 h-28 drop-shadow-2xl rounded-3xl object-contain border border-[#38BDF8]/20 bg-[#01133f]"
+            onError={() => {
+              if (!imgError) setImgError(true);
+            }}
           />
         </div>
 
@@ -86,7 +96,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           {statusMessage}
         </p>
 
-        {/* Fallback skip in case of network stall */}
+        {/* Fallback skip in case user wants immediate access */}
         <button
           onClick={() => {
             setFade(true);

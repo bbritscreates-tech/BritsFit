@@ -261,6 +261,7 @@ export interface UserSettings {
   defaultRestSeconds: number;
   userName?: string;
   activeProfileId?: string;
+  plannerPreferences?: PlannerPreferences;
 }
 
 export type DateRangePreset = '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
@@ -274,4 +275,180 @@ export interface PersonalRecord {
   numericValue: number;
   date: string;
   context?: string;
+}
+
+// ==========================================
+// PLANNER & PERSONAL ORGANISATION TYPES
+// ==========================================
+
+export type TaskPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type TaskStatus = 'not_started' | 'in_progress' | 'completed' | 'skipped' | 'cancelled';
+export type RecurrenceType = 'none' | 'daily' | 'weekdays' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
+
+export interface TaskSubtask {
+  id: string;
+  title: string;
+  completed: boolean;
+  completedAt?: string;
+}
+
+export interface TaskReminder {
+  enabled: boolean;
+  time?: string; // HH:MM or ISO
+  advanceMinutes?: number; // 0, 10, 15, 30, 60
+  notified?: boolean;
+}
+
+export interface RecurrenceRule {
+  type: RecurrenceType;
+  interval?: number; // e.g., every 2 weeks
+  daysOfWeek?: number[]; // 0=Sun, 1=Mon, ..., 6=Sat
+  endDate?: string; // YYYY-MM-DD
+  count?: number;
+  completedDates?: string[]; // Specific occurrence dates marked complete (YYYY-MM-DD)
+  skippedDates?: string[]; // Specific occurrence dates skipped
+}
+
+export interface PlannerTask {
+  id: string;
+  profileId?: string;
+  title: string;
+  description?: string;
+  dueDate?: string; // YYYY-MM-DD (empty = inbox / unscheduled)
+  startTime?: string; // HH:MM
+  endTime?: string; // HH:MM
+  estimatedDurationMinutes?: number;
+  actualDurationMinutes?: number;
+  priority: TaskPriority;
+  status: TaskStatus;
+  category: string; // Personal, Household, Work, Shopping, Appointments, Fitness, Health, Other
+  listId?: string; // Link to TaskList (Project / Named list)
+  subtasks: TaskSubtask[];
+  notes?: string;
+  reminder?: TaskReminder;
+  recurrence?: RecurrenceRule;
+  completedAt?: string;
+  linkedWorkoutTemplateId?: string;
+  linkedCardioType?: CardioActivityType;
+  completedWorkoutId?: string;
+  completedCardioId?: string;
+  orderIndex?: number;
+  isArchived?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PlannedActivityType =
+  | 'workout_template'
+  | 'workout'
+  | 'walk'
+  | 'run'
+  | 'treadmill'
+  | 'cardio'
+  | 'rest_day'
+  | 'appointment'
+  | 'custom';
+
+export interface PlannedActivity {
+  id: string;
+  profileId?: string;
+  title: string;
+  activityType: PlannedActivityType;
+  date: string; // YYYY-MM-DD
+  startTime?: string; // HH:MM
+  endTime?: string; // HH:MM
+  durationMinutes?: number;
+  linkedTemplateId?: string;
+  linkedTemplateName?: string;
+  cardioActivityType?: CardioActivityType;
+  targetDistanceKm?: number;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'skipped' | 'cancelled';
+  completedWorkoutId?: string;
+  completedCardioId?: string;
+  reminder?: TaskReminder;
+  recurrence?: RecurrenceRule;
+  notes?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskList {
+  id: string;
+  profileId?: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  isProject?: boolean;
+  isArchived?: boolean;
+  orderIndex?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PersonalNote {
+  id: string;
+  profileId?: string;
+  title: string;
+  content: string;
+  category?: string; // 'General' | 'Journal' | 'Ideas' | 'Workout Reflection' | 'Project'
+  linkedDate?: string; // YYYY-MM-DD
+  linkedTaskId?: string;
+  linkedListId?: string;
+  linkedWorkoutId?: string;
+  tags?: string[];
+  isPinned?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FocusSession {
+  id: string;
+  profileId?: string;
+  taskId?: string;
+  taskTitle?: string;
+  durationMinutes: number;
+  actualMinutes: number;
+  completed: boolean;
+  notes?: string;
+  date: string; // ISO
+  createdAt: string;
+}
+
+export interface ReminderItem {
+  id: string;
+  profileId?: string;
+  targetType: 'task' | 'workout' | 'cardio' | 'habit' | 'water' | 'sleep' | 'goal' | 'custom';
+  targetId?: string;
+  title: string;
+  message?: string;
+  triggerTime: string; // YYYY-MM-DDTHH:MM
+  advanceMinutes?: number;
+  isSnoozed?: boolean;
+  snoozedUntil?: string;
+  isCompleted?: boolean;
+  isEnabled: boolean;
+  recurrence?: RecurrenceRule;
+  createdAt: string;
+}
+
+export interface MyDayCardConfig {
+  plannedWorkouts: boolean;
+  plannedCardio: boolean;
+  tasks: boolean;
+  appointments: boolean;
+  water: boolean;
+  habits: boolean;
+  focusTimer: boolean;
+  quickNotes: boolean;
+}
+
+export interface PlannerPreferences {
+  startOfWeek: 'monday' | 'sunday';
+  timeFormat: '12h' | '24h';
+  defaultTaskDuration: number;
+  notificationsEnabled: boolean;
+  myDayCards: MyDayCardConfig;
+  customCategories: string[];
 }

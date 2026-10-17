@@ -78,6 +78,36 @@ service cloud.firestore {
       match /templates/{templateId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Planner tasks subcollection
+      match /tasks/{taskId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Planned activities subcollection
+      match /plannedActivities/{activityId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Task lists / projects subcollection
+      match /taskLists/{listId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Personal notes subcollection
+      match /notes/{noteId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Focus sessions subcollection
+      match /focusSessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Reminders subcollection
+      match /reminders/{reminderId} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }

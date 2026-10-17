@@ -10,6 +10,13 @@ import {
   FamilyProfile,
   CloudSyncStatus,
   AuthUserProfile,
+  PlannerTask,
+  PlannedActivity,
+  TaskList,
+  PersonalNote,
+  FocusSession,
+  ReminderItem,
+  PlannerPreferences,
 } from '../types/fitness';
 import {
   initialExercises,
@@ -20,6 +27,12 @@ import {
   initialHabits,
   initialGoals,
   defaultSettings,
+  defaultPlannerPreferences,
+  initialPlannerTasks,
+  initialPlannedActivities,
+  initialTaskLists,
+  initialPersonalNotes,
+  initialReminders,
 } from './seedData';
 import { formatDuration, formatPace } from './calculations';
 import {
@@ -54,6 +67,12 @@ export interface FullBackupPayload {
   measurements: BodyMeasurementEntry[];
   habits: DailyHabitEntry[];
   goals: GoalItem[];
+  tasks: PlannerTask[];
+  plannedActivities: PlannedActivity[];
+  taskLists: TaskList[];
+  notes: PersonalNote[];
+  focusSessions: FocusSession[];
+  reminders: ReminderItem[];
 }
 
 export const defaultPrimaryProfile: FamilyProfile = {
@@ -78,6 +97,12 @@ interface MemoryCacheStructure {
   measurements: BodyMeasurementEntry[];
   habits: DailyHabitEntry[];
   goals: GoalItem[];
+  tasks: PlannerTask[];
+  plannedActivities: PlannedActivity[];
+  taskLists: TaskList[];
+  notes: PersonalNote[];
+  focusSessions: FocusSession[];
+  reminders: ReminderItem[];
 }
 
 class StorageService {
@@ -127,6 +152,12 @@ class StorageService {
           measurements: parsed.measurements || initialMeasurements,
           habits: parsed.habits || initialHabits,
           goals: parsed.goals || initialGoals,
+          tasks: parsed.tasks || initialPlannerTasks,
+          plannedActivities: parsed.plannedActivities || initialPlannedActivities,
+          taskLists: parsed.taskLists || initialTaskLists,
+          notes: parsed.notes || initialPersonalNotes,
+          focusSessions: parsed.focusSessions || [],
+          reminders: parsed.reminders || initialReminders,
         };
       } else {
         this.resetToDefaults();
@@ -198,6 +229,12 @@ class StorageService {
       measurements: initialMeasurements,
       habits: initialHabits,
       goals: initialGoals,
+      tasks: [...initialPlannerTasks],
+      plannedActivities: [...initialPlannedActivities],
+      taskLists: [...initialTaskLists],
+      notes: [...initialPersonalNotes],
+      focusSessions: [],
+      reminders: [...initialReminders],
     };
     this.persist();
   }
@@ -214,6 +251,12 @@ class StorageService {
       measurements: [],
       habits: [],
       goals: [],
+      tasks: [],
+      plannedActivities: [],
+      taskLists: [],
+      notes: [],
+      focusSessions: [],
+      reminders: [],
     };
     this.persist();
   }
@@ -626,6 +669,320 @@ class StorageService {
     }
   }
 
+  // --- Planner Tasks ---
+  public getTasks(profileId?: string): PlannerTask[] {
+    const list = this.memoryCache?.tasks || [];
+    const active = profileId || this.getActiveProfileId();
+    return list.filter((t) => !t.profileId || t.profileId === active);
+  }
+
+  public getAllTasks(): PlannerTask[] {
+    return this.memoryCache?.tasks || [];
+  }
+
+  public getTask(id: string): PlannerTask | undefined {
+    return this.memoryCache?.tasks.find((t) => t.id === id);
+  }
+
+  public saveTask(task: PlannerTask) {
+    if (!this.memoryCache) this.init();
+    const activeId = this.getActiveProfileId();
+    const taskWithProfile: PlannerTask = {
+      ...task,
+      profileId: task.profileId || activeId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const idx = this.memoryCache!.tasks.findIndex((t) => t.id === taskWithProfile.id);
+    if (idx >= 0) {
+      this.memoryCache!.tasks[idx] = taskWithProfile;
+    } else {
+      this.memoryCache!.tasks.unshift(taskWithProfile);
+    }
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/tasks/${taskWithProfile.id}`;
+      setDoc(doc(firestore, path), taskWithProfile, { merge: true }).catch((err) =>
+        handleFirestoreError(err, OperationType.WRITE, path)
+      );
+    }
+  }
+
+  public deleteTask(id: string) {
+    if (!this.memoryCache) return;
+    this.memoryCache.tasks = this.memoryCache.tasks.filter((t) => t.id !== id);
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/tasks/${id}`;
+      deleteDoc(doc(firestore, path)).catch((err) =>
+        handleFirestoreError(err, OperationType.DELETE, path)
+      );
+    }
+  }
+
+  public toggleTaskComplete(id: string) {
+    const task = this.getTask(id);
+    if (!task) return;
+    const isNowCompleted = task.status !== 'completed';
+    const updated: PlannerTask = {
+      ...task,
+      status: isNowCompleted ? 'completed' : 'not_started',
+      completedAt: isNowCompleted ? new Date().toISOString() : undefined,
+      updatedAt: new Date().toISOString(),
+    };
+    this.saveTask(updated);
+  }
+
+  // --- Planned Activities ---
+  public getPlannedActivities(profileId?: string): PlannedActivity[] {
+    const list = this.memoryCache?.plannedActivities || [];
+    const active = profileId || this.getActiveProfileId();
+    return list.filter((a) => !a.profileId || a.profileId === active);
+  }
+
+  public getAllPlannedActivities(): PlannedActivity[] {
+    return this.memoryCache?.plannedActivities || [];
+  }
+
+  public savePlannedActivity(activity: PlannedActivity) {
+    if (!this.memoryCache) this.init();
+    const activeId = this.getActiveProfileId();
+    const actWithProfile: PlannedActivity = {
+      ...activity,
+      profileId: activity.profileId || activeId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const idx = this.memoryCache!.plannedActivities.findIndex((a) => a.id === actWithProfile.id);
+    if (idx >= 0) {
+      this.memoryCache!.plannedActivities[idx] = actWithProfile;
+    } else {
+      this.memoryCache!.plannedActivities.unshift(actWithProfile);
+    }
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/plannedActivities/${actWithProfile.id}`;
+      setDoc(doc(firestore, path), actWithProfile, { merge: true }).catch((err) =>
+        handleFirestoreError(err, OperationType.WRITE, path)
+      );
+    }
+  }
+
+  public deletePlannedActivity(id: string) {
+    if (!this.memoryCache) return;
+    this.memoryCache.plannedActivities = this.memoryCache.plannedActivities.filter((a) => a.id !== id);
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/plannedActivities/${id}`;
+      deleteDoc(doc(firestore, path)).catch((err) =>
+        handleFirestoreError(err, OperationType.DELETE, path)
+      );
+    }
+  }
+
+  // --- Task Lists ---
+  public getTaskLists(profileId?: string): TaskList[] {
+    const list = this.memoryCache?.taskLists || [];
+    const active = profileId || this.getActiveProfileId();
+    return list.filter((l) => !l.profileId || l.profileId === active);
+  }
+
+  public saveTaskList(taskList: TaskList) {
+    if (!this.memoryCache) this.init();
+    const activeId = this.getActiveProfileId();
+    const listWithProfile: TaskList = {
+      ...taskList,
+      profileId: taskList.profileId || activeId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const idx = this.memoryCache!.taskLists.findIndex((l) => l.id === listWithProfile.id);
+    if (idx >= 0) {
+      this.memoryCache!.taskLists[idx] = listWithProfile;
+    } else {
+      this.memoryCache!.taskLists.push(listWithProfile);
+    }
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/taskLists/${listWithProfile.id}`;
+      setDoc(doc(firestore, path), listWithProfile, { merge: true }).catch((err) =>
+        handleFirestoreError(err, OperationType.WRITE, path)
+      );
+    }
+  }
+
+  public deleteTaskList(id: string) {
+    if (!this.memoryCache) return;
+    this.memoryCache.taskLists = this.memoryCache.taskLists.filter((l) => l.id !== id);
+    this.memoryCache.tasks = this.memoryCache.tasks.map((t) => (t.listId === id ? { ...t, listId: undefined } : t));
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/taskLists/${id}`;
+      deleteDoc(doc(firestore, path)).catch((err) =>
+        handleFirestoreError(err, OperationType.DELETE, path)
+      );
+    }
+  }
+
+  // --- Personal Notes ---
+  public getNotes(profileId?: string): PersonalNote[] {
+    const list = this.memoryCache?.notes || [];
+    const active = profileId || this.getActiveProfileId();
+    return list.filter((n) => !n.profileId || n.profileId === active);
+  }
+
+  public saveNote(note: PersonalNote) {
+    if (!this.memoryCache) this.init();
+    const activeId = this.getActiveProfileId();
+    const noteWithProfile: PersonalNote = {
+      ...note,
+      profileId: note.profileId || activeId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const idx = this.memoryCache!.notes.findIndex((n) => n.id === noteWithProfile.id);
+    if (idx >= 0) {
+      this.memoryCache!.notes[idx] = noteWithProfile;
+    } else {
+      this.memoryCache!.notes.unshift(noteWithProfile);
+    }
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/notes/${noteWithProfile.id}`;
+      setDoc(doc(firestore, path), noteWithProfile, { merge: true }).catch((err) =>
+        handleFirestoreError(err, OperationType.WRITE, path)
+      );
+    }
+  }
+
+  public deleteNote(id: string) {
+    if (!this.memoryCache) return;
+    this.memoryCache.notes = this.memoryCache.notes.filter((n) => n.id !== id);
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/notes/${id}`;
+      deleteDoc(doc(firestore, path)).catch((err) =>
+        handleFirestoreError(err, OperationType.DELETE, path)
+      );
+    }
+  }
+
+  // --- Focus Sessions ---
+  public getFocusSessions(profileId?: string): FocusSession[] {
+    const list = this.memoryCache?.focusSessions || [];
+    const active = profileId || this.getActiveProfileId();
+    return list.filter((f) => !f.profileId || f.profileId === active);
+  }
+
+  public saveFocusSession(session: FocusSession) {
+    if (!this.memoryCache) this.init();
+    const activeId = this.getActiveProfileId();
+    const sessionWithProfile: FocusSession = {
+      ...session,
+      profileId: session.profileId || activeId,
+    };
+
+    this.memoryCache!.focusSessions.unshift(sessionWithProfile);
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/focusSessions/${sessionWithProfile.id}`;
+      setDoc(doc(firestore, path), sessionWithProfile, { merge: true }).catch((err) =>
+        handleFirestoreError(err, OperationType.WRITE, path)
+      );
+    }
+  }
+
+  // --- Reminders ---
+  public getReminders(profileId?: string): ReminderItem[] {
+    const list = this.memoryCache?.reminders || [];
+    const active = profileId || this.getActiveProfileId();
+    return list.filter((r) => !r.profileId || r.profileId === active);
+  }
+
+  public saveReminder(reminder: ReminderItem) {
+    if (!this.memoryCache) this.init();
+    const activeId = this.getActiveProfileId();
+    const remWithProfile: ReminderItem = {
+      ...reminder,
+      profileId: reminder.profileId || activeId,
+    };
+
+    const idx = this.memoryCache!.reminders.findIndex((r) => r.id === remWithProfile.id);
+    if (idx >= 0) {
+      this.memoryCache!.reminders[idx] = remWithProfile;
+    } else {
+      this.memoryCache!.reminders.unshift(remWithProfile);
+    }
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/reminders/${remWithProfile.id}`;
+      setDoc(doc(firestore, path), remWithProfile, { merge: true }).catch((err) =>
+        handleFirestoreError(err, OperationType.WRITE, path)
+      );
+    }
+  }
+
+  public deleteReminder(id: string) {
+    if (!this.memoryCache) return;
+    this.memoryCache.reminders = this.memoryCache.reminders.filter((r) => r.id !== id);
+    this.persist();
+
+    if (this.currentUser && !this.isSyncingFromCloud) {
+      const path = `users/${this.currentUser.uid}/reminders/${id}`;
+      deleteDoc(doc(firestore, path)).catch((err) =>
+        handleFirestoreError(err, OperationType.DELETE, path)
+      );
+    }
+  }
+
+  public toggleReminder(id: string) {
+    if (!this.memoryCache) return;
+    const rem = this.memoryCache.reminders.find((r) => r.id === id);
+    if (!rem) return;
+    this.saveReminder({ ...rem, isEnabled: !rem.isEnabled });
+  }
+
+  public snoozeReminder(id: string, minutes: number = 15) {
+    if (!this.memoryCache) return;
+    const rem = this.memoryCache.reminders.find((r) => r.id === id);
+    if (!rem) return;
+    const snoozedDate = new Date(Date.now() + minutes * 60000).toISOString();
+    this.saveReminder({
+      ...rem,
+      isSnoozed: true,
+      snoozedUntil: snoozedDate,
+    });
+  }
+
+  // --- Planner Preferences ---
+  public getPlannerPreferences(): PlannerPreferences {
+    return this.memoryCache?.settings.plannerPreferences || defaultPlannerPreferences;
+  }
+
+  public savePlannerPreferences(prefs: Partial<PlannerPreferences>) {
+    if (!this.memoryCache) this.init();
+    const current = this.getPlannerPreferences();
+    const updated: PlannerPreferences = {
+      ...current,
+      ...prefs,
+      myDayCards: {
+        ...current.myDayCards,
+        ...(prefs.myDayCards || {}),
+      },
+    };
+    this.saveSettings({ plannerPreferences: updated });
+  }
+
   // --- Cloud Sync Integration ---
   public attachCloudUser(user: AuthUserProfile | null) {
     // Unsubscribe from previous user's snapshots
@@ -783,6 +1140,138 @@ class StorageService {
         }
       );
       this.unsubs.push(unsubGoals);
+
+      // 7. Listen to Tasks
+      const tasksPath = `users/${uid}/tasks`;
+      const unsubTasks = onSnapshot(
+        collection(firestore, tasksPath),
+        (snap) => {
+          if (!snap.empty && this.memoryCache) {
+            const cloudTasks: PlannerTask[] = [];
+            snap.forEach((d) => cloudTasks.push(d.data() as PlannerTask));
+            this.isSyncingFromCloud = true;
+            this.memoryCache.tasks = cloudTasks;
+            this.persist();
+            this.isSyncingFromCloud = false;
+          }
+          this.notifySyncStatus('synced');
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, tasksPath);
+          this.notifySyncStatus('error');
+        }
+      );
+      this.unsubs.push(unsubTasks);
+
+      // 8. Listen to Planned Activities
+      const activitiesPath = `users/${uid}/plannedActivities`;
+      const unsubActivities = onSnapshot(
+        collection(firestore, activitiesPath),
+        (snap) => {
+          if (!snap.empty && this.memoryCache) {
+            const cloudActs: PlannedActivity[] = [];
+            snap.forEach((d) => cloudActs.push(d.data() as PlannedActivity));
+            this.isSyncingFromCloud = true;
+            this.memoryCache.plannedActivities = cloudActs;
+            this.persist();
+            this.isSyncingFromCloud = false;
+          }
+          this.notifySyncStatus('synced');
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, activitiesPath);
+          this.notifySyncStatus('error');
+        }
+      );
+      this.unsubs.push(unsubActivities);
+
+      // 9. Listen to Task Lists
+      const listsPath = `users/${uid}/taskLists`;
+      const unsubLists = onSnapshot(
+        collection(firestore, listsPath),
+        (snap) => {
+          if (!snap.empty && this.memoryCache) {
+            const cloudLists: TaskList[] = [];
+            snap.forEach((d) => cloudLists.push(d.data() as TaskList));
+            this.isSyncingFromCloud = true;
+            this.memoryCache.taskLists = cloudLists;
+            this.persist();
+            this.isSyncingFromCloud = false;
+          }
+          this.notifySyncStatus('synced');
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, listsPath);
+          this.notifySyncStatus('error');
+        }
+      );
+      this.unsubs.push(unsubLists);
+
+      // 10. Listen to Personal Notes
+      const notesPath = `users/${uid}/notes`;
+      const unsubNotes = onSnapshot(
+        collection(firestore, notesPath),
+        (snap) => {
+          if (!snap.empty && this.memoryCache) {
+            const cloudNotes: PersonalNote[] = [];
+            snap.forEach((d) => cloudNotes.push(d.data() as PersonalNote));
+            this.isSyncingFromCloud = true;
+            this.memoryCache.notes = cloudNotes;
+            this.persist();
+            this.isSyncingFromCloud = false;
+          }
+          this.notifySyncStatus('synced');
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, notesPath);
+          this.notifySyncStatus('error');
+        }
+      );
+      this.unsubs.push(unsubNotes);
+
+      // 11. Listen to Focus Sessions
+      const focusPath = `users/${uid}/focusSessions`;
+      const unsubFocus = onSnapshot(
+        collection(firestore, focusPath),
+        (snap) => {
+          if (!snap.empty && this.memoryCache) {
+            const cloudFocus: FocusSession[] = [];
+            snap.forEach((d) => cloudFocus.push(d.data() as FocusSession));
+            this.isSyncingFromCloud = true;
+            this.memoryCache.focusSessions = cloudFocus;
+            this.persist();
+            this.isSyncingFromCloud = false;
+          }
+          this.notifySyncStatus('synced');
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, focusPath);
+          this.notifySyncStatus('error');
+        }
+      );
+      this.unsubs.push(unsubFocus);
+
+      // 12. Listen to Reminders
+      const remindersPath = `users/${uid}/reminders`;
+      const unsubReminders = onSnapshot(
+        collection(firestore, remindersPath),
+        (snap) => {
+          if (!snap.empty && this.memoryCache) {
+            const cloudReminders: ReminderItem[] = [];
+            snap.forEach((d) => cloudReminders.push(d.data() as ReminderItem));
+            this.isSyncingFromCloud = true;
+            this.memoryCache.reminders = cloudReminders;
+            this.persist();
+            this.isSyncingFromCloud = false;
+          }
+          this.notifySyncStatus('synced');
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, remindersPath);
+          this.notifySyncStatus('error');
+        }
+      );
+      this.unsubs.push(unsubReminders);
     } catch (err) {
       console.error('Error attaching cloud sync:', err);
       this.notifySyncStatus('error');
@@ -830,6 +1319,36 @@ class StorageService {
         await setDoc(doc(firestore, `users/${uid}/goals/${g.id}`), g, { merge: true });
       }
 
+      // Push tasks
+      for (const t of this.memoryCache.tasks) {
+        await setDoc(doc(firestore, `users/${uid}/tasks/${t.id}`), t, { merge: true });
+      }
+
+      // Push planned activities
+      for (const a of this.memoryCache.plannedActivities) {
+        await setDoc(doc(firestore, `users/${uid}/plannedActivities/${a.id}`), a, { merge: true });
+      }
+
+      // Push task lists
+      for (const l of this.memoryCache.taskLists) {
+        await setDoc(doc(firestore, `users/${uid}/taskLists/${l.id}`), l, { merge: true });
+      }
+
+      // Push notes
+      for (const n of this.memoryCache.notes) {
+        await setDoc(doc(firestore, `users/${uid}/notes/${n.id}`), n, { merge: true });
+      }
+
+      // Push focus sessions
+      for (const f of this.memoryCache.focusSessions) {
+        await setDoc(doc(firestore, `users/${uid}/focusSessions/${f.id}`), f, { merge: true });
+      }
+
+      // Push reminders
+      for (const r of this.memoryCache.reminders) {
+        await setDoc(doc(firestore, `users/${uid}/reminders/${r.id}`), r, { merge: true });
+      }
+
       this.notifySyncStatus('synced');
       return true;
     } catch (err) {
@@ -855,6 +1374,12 @@ class StorageService {
       measurements: this.memoryCache!.measurements,
       habits: this.memoryCache!.habits,
       goals: this.memoryCache!.goals,
+      tasks: this.memoryCache!.tasks,
+      plannedActivities: this.memoryCache!.plannedActivities,
+      taskLists: this.memoryCache!.taskLists,
+      notes: this.memoryCache!.notes,
+      focusSessions: this.memoryCache!.focusSessions,
+      reminders: this.memoryCache!.reminders,
     };
   }
 
@@ -877,6 +1402,12 @@ class StorageService {
         measurements: Array.isArray(payload.measurements) ? payload.measurements : [],
         habits: Array.isArray(payload.habits) ? payload.habits : [],
         goals: Array.isArray(payload.goals) ? payload.goals : [],
+        tasks: Array.isArray(payload.tasks) ? payload.tasks : initialPlannerTasks,
+        plannedActivities: Array.isArray(payload.plannedActivities) ? payload.plannedActivities : initialPlannedActivities,
+        taskLists: Array.isArray(payload.taskLists) ? payload.taskLists : initialTaskLists,
+        notes: Array.isArray(payload.notes) ? payload.notes : initialPersonalNotes,
+        focusSessions: Array.isArray(payload.focusSessions) ? payload.focusSessions : [],
+        reminders: Array.isArray(payload.reminders) ? payload.reminders : initialReminders,
       };
       this.persist();
 

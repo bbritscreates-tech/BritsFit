@@ -31,6 +31,7 @@ import {
   Flame,
   Plus,
 } from 'lucide-react';
+import { BritsFitLogo } from '../common/BritsFitLogo';
 
 interface DashboardViewProps {
   workouts: WorkoutSession[];
@@ -148,13 +149,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="space-y-6 pb-20 max-w-7xl mx-auto px-4 sm:px-6 pt-4">
       {/* Top Banner & Date Range Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Personal Dashboard
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Consolidated exercise logs, cardio progress, body metrics, and wellbeing
-          </p>
+        <div className="flex items-center gap-3">
+          <BritsFitLogo size="sm" showText={false} />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Personal Dashboard
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Consolidated exercise logs, cardio progress, body metrics, and wellbeing
+            </p>
+          </div>
         </div>
 
         {/* Date Range Selector */}
